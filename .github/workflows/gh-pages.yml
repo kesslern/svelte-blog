@@ -17,9 +17,6 @@ jobs:
       - uses: borales/actions-yarn@v2.0.0
         with:
           cmd: build
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: ssr-build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'

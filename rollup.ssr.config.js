@@ -2,16 +2,17 @@ import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import css from 'rollup-plugin-css-only';
+import multiInput from 'rollup-plugin-multi-input';
 
 export default {
-	input: 'src/App.svelte',
+	input: ['src/App.svelte', 'src/Index.svelte'],
 	output: {
-		sourcemap: true,
-		format: 'umd',
+		format: 'esm',
 		name: 'app',
-		file: 'public/build/ssr.js',
+		dir: 'build',
 	},
 	plugins: [
+		multiInput(),
 		svelte({
 			compilerOptions: {
 				dev: true,
