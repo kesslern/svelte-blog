@@ -2,9 +2,8 @@
   "name": "svelte-blog",
   "version": "0.0.1",
   "license": "MIT",
-  "type": "module",
   "scripts": {
-    "build": "rollup --config rollup.ssr.config.js && node ssr-build"
+    "build": "node ssr-build"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
