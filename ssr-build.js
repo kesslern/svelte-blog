@@ -1,39 +1,10 @@
-const rollup = require('rollup')
 const fs = require('fs')
 const marked = require('marked')
-const resolve = require('@rollup/plugin-node-resolve')
 const { exit } = require('process')
-const svelte = require('rollup-plugin-svelte')
-const commonjs = require('@rollup/plugin-commonjs')
-const css = require('rollup-plugin-css-only')
+const rollup = require('./scripts/rollup')
 
 async function build() {
-  const bundle = await rollup.rollup({
-    input: ['src/Index.svelte'],
-    plugins: [
-      svelte({
-        compilerOptions: {
-          dev: true,
-          generate: "ssr",
-        }
-      }),
-      resolve.default({
-        browser: true,
-        dedupe: ['svelte']
-      }),
-      css({ output: 'ssr.css' }),
-      commonjs(),
-    ]
-  });
-
-  // or write the bundle to disk
-  await bundle.write({
-    format: "umd",
-    dir: "build",
-    name: 'Index',
-  });
-
-  const Index = require('./build/Index.js')
+  const Index = await rollup('Index')
 
   var inDateField = false
   var date = null
