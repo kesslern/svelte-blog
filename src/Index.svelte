@@ -1,6 +1,7 @@
 <script>
   export let html
   export let css
+  export let date
 
   const cssStart = "<style>"
   const cssEnd = "</style>"
@@ -310,5 +311,10 @@ span.visited {
 	{@html cssEnd}
 </head>
 
-<body>{@html html}</body>
+<body>
+  {@html html}
+  <footer>
+    Posted on {date.toLocaleDateString("en-US")}
+  </footer>
+</body>
 </html>
