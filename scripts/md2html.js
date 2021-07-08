@@ -1,7 +1,9 @@
 const fs = require('fs')
 const marked = require('marked')
-const { exit } = require('process')
 
+// Parse a string into a date.
+// @param {string} date A YYYY-MM-DD date string.
+// @return {date} the date or null if parsing fails.
  function parseDate(date) {
   if (date = date.match(/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)) {
     date[0] = new Date(+date[1], +date[2] - 1, +date[3]);
@@ -12,6 +14,9 @@ const { exit } = require('process')
   }
 }
 
+// Compile a markdown file into HTML.
+// @param {string} filename The path to the markdown file.
+// @return {{date, html}} The HTML of the post and an extracted date, if any
 async function md2html(filename) {
   var inDateField = false
   var date = null

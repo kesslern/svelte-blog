@@ -23,7 +23,7 @@ async function run(componentName) {
     ]
   });
 
-  // or write the bundle to disk
+  // Write the bundle to disk
   await bundle.write({
     format: "umd",
     dir: "build",

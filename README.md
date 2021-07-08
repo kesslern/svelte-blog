@@ -6,8 +6,10 @@ View the full guide [here](https://www.base2.io/2020/12/12/svelte-ssr).
 
 Install dependencies with `yarn install`.
 
-## Running
+## Building
 
-Start the client-side development server with `yarn dev`.
+Build the website with `yarn build`. Files in `public/` are ready to serve.
 
-Build the server-side component with `yarn ssr-build`, then start the Express server-side rendering demo with `yarn ssr`.
+## Local server
+
+`yarn serve` serves files in `public/`.
