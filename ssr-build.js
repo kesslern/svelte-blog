@@ -13,7 +13,6 @@ async function build() {
   const { date, html } = await md2html('post.md')
 
   const params = {
-    css: "",
     html,
     date,
   }

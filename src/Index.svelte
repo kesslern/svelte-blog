@@ -1,10 +1,6 @@
 <script>
   export let html
-  export let css
   export let date
-
-  const cssStart = "<style>"
-  const cssEnd = "</style>"
 </script>
 
 <!DOCTYPE html>
@@ -17,10 +13,6 @@
 
 	<link rel='icon' type='image/png' href='/favicon.png'>
 	<link rel='stylesheet' href='/styles.css'>
-
-  {@html cssStart}
-  {@html css.code}
-	{@html cssEnd}
 </head>
 
 <body>
