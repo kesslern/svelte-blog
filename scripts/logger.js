@@ -35,14 +35,19 @@ class Logger {
   }
 
   async run(msg, fn) {
-    var doneMsg = null
+    var result = null
+
     this.start(msg)
     try {
-      doneMsg = await fn()
-      this.success(doneMsg)
+      result = await fn()
+
+      if (this.newlineNeeded) {
+        this.success()
+      }
     } catch (e) {
       this.error(e)
     }
+    return result
   }
 }
 

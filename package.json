@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "node ssr-build",
+    "build": "rm -rf public && node ssr-build",
     "serve": "http-server public/"
   },
   "devDependencies": {

@@ -18,38 +18,41 @@ async function build() {
     ensureDirExists(`${outdir}/post`)
   })
 
-  let postsPaths
-  await log.run('Finding posts', () => {
-    postsPaths = getPosts()
-    log.success(`Found ${postsPaths.length} posts`)
+  const postsPaths = await log.run('Finding posts', () => {
+    const result = getPosts()
+    log.success(`Found ${result.length} posts`)
+    return result
   })
 
-  let posts
-  await log.run('Building posts', async () => {
-    posts = await Promise.all(
-      postsPaths.map(async (postPath) => await md2html(postPath)),
-    )
+  const posts = await log.run(
+    'Building posts',
+    async () =>
+      await Promise.all(
+        postsPaths.map(async (postPath) => await md2html(postPath)),
+      ),
+  )
+
+  const { Index, Post } = await log.run(
+    'Building svelte components',
+    async () => ({
+      Index: await rollup('Index'),
+      Post: await rollup('Post'),
+    }),
+  )
+
+  posts.forEach((post) => {
+    post.slug = slugify(stripHtml(post.title).result)
+    post.path = `${outdir}/post/${post.slug}.html`
   })
 
-  let Index, Post
-  await log.run('Building svelte components', async () => {
-    Index = await rollup('Index')
-    Post = await rollup('Post')
-  })
-
-  await log.run('Writing posts', () => {
+  await log.run(`Writing posts to ${outdir}/post/`, () => {
     posts.forEach((post) => {
-      post.slug = slugify(stripHtml(post.title).result)
-      const postPath = `${outdir}/post/${post.slug}.html`
-      fs.writeFileSync(postPath, Post.render({ ...post }).html)
+      fs.writeFileSync(post.path, Post.render({ ...post }).html)
       post.url = `/post/${post.slug}.html`
     })
   })
 
-  let index
-  await log.run('Rendering index', () => {
-    index = Index.render({ posts })
-  })
+  const index = await log.run('Rendering index', () => Index.render({ posts }))
 
   await log.run('Copying static files', copyStatic)
 
