@@ -1,60 +1,88 @@
 const fs = require('fs')
+const { default: slugify } = require('slugify')
+const { stripHtml } = require('string-strip-html')
+const logger = require('./scripts/logger.js')
 const md2html = require('./scripts/md2html')
 const rollup = require('./scripts/rollup')
 
-const outdir = process.env["outdir"] || "public"
-const postsDir = process.env["postsdir"] || "posts"
+const outdir = process.env['outdir'] || 'public'
+const postsDir = process.env['postsdir'] || 'posts'
+
+const log = new logger()
 
 async function build() {
-  const posts = await getPosts()
-  console.log(posts);
+  log.start('Starting build process')
 
-  const Index = await rollup('Index')
-  const { date, html } = await md2html('post.md')
-
-  const params = {
-    html,
-    date,
-  }
-
-  copyStatic()
-  const index = Index.render(params)
-
-  fs.mkdir(outdir, err => {
-    if (err && err.code != "EEXIST") {
-      console.log('error', err);
-      process.exit(1);
-    }
+  await log.run('Ensuring build directories exist', () => {
+    ensureDirExists(outdir)
+    ensureDirExists(`${outdir}/post`)
   })
 
-  fs.writeFileSync(`${outdir}/index.html`, index.html, err => {
-    if (err) {
-      console.log('error', err);
-      process.exit(1);
-    }
+  let postsPaths
+  await log.run('Finding posts', () => {
+    postsPaths = getPosts()
+    log.success(`Found ${postsPaths.length} posts`)
+  })
+
+  let posts
+  await log.run('Building posts', async () => {
+    posts = await Promise.all(
+      postsPaths.map(async (postPath) => await md2html(postPath)),
+    )
+  })
+
+  let Index, Post
+  await log.run('Building svelte components', async () => {
+    Index = await rollup('Index')
+    Post = await rollup('Post')
+  })
+
+  await log.run('Writing posts', () => {
+    posts.forEach((post) => {
+      post.slug = slugify(stripHtml(post.title).result)
+      const postPath = `${outdir}/post/${post.slug}.html`
+      fs.writeFileSync(postPath, Post.render({ ...post }).html)
+      post.url = `/post/${post.slug}.html`
+    })
+  })
+
+  let index
+  await log.run('Rendering index', () => {
+    index = Index.render({ posts })
+  })
+
+  await log.run('Copying static files', copyStatic)
+
+  await log.run('Writing index.html', () => {
+    fs.writeFileSync(`${outdir}/index.html`, index.html)
   })
 }
 
 // List all files in the posts directory.
 function getPosts() {
-  fs.readdir(postsDir, (err, files) => {
-    if (err) {
-      console.log('error getting posts', err);
-      process.exit(1);
-    }
-    return files;
+  const posts = []
+  fs.readdirSync(postsDir).forEach((file) => {
+    posts.push(`${postsDir}/${file}`)
   })
+  return posts
 }
 
 // Copy files in static/ to outdir/
 function copyStatic() {
   const staticDir = 'static'
   const staticFiles = fs.readdirSync(staticDir)
-  staticFiles.forEach(file =>{
+  staticFiles.forEach((file) => {
     const src = `${staticDir}/${file}`
     const dest = `${outdir}/${file}`
     fs.copyFileSync(src, dest)
   })
+}
+
+// Ensure a directory exists.
+function ensureDirExists(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir)
+  }
 }
 
 build()

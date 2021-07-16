@@ -1,5 +1,6 @@
 <script>
-  export let posts
+  export let html
+  export let date
 </script>
 
 <!DOCTYPE html>
@@ -15,10 +16,9 @@
 </head>
 
 <body>
-  <ul>
-    {#each posts as post}
-      <li><a href={post.url}>{@html post.title}</a></li>
-    {/each}
-  </ul>
+  {@html html}
+  <footer>
+    Posted on {date.toLocaleDateString("en-US")}
+  </footer>
 </body>
 </html>
