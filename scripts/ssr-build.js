@@ -1,14 +1,13 @@
-const fs = require('fs')
-const { default: slugify } = require('slugify')
-const { stripHtml } = require('string-strip-html')
-const logger = require('./scripts/logger.js')
-const md2html = require('./scripts/md2html')
-const rollup = require('./scripts/rollup')
+import fs from 'fs'
+import slugify from 'slugify'
+import { stripHtml } from 'string-strip-html'
+import rollup from './rollup.js'
+
+import md2html from './md2html.js'
+import log from './logger.js'
 
 const outdir = process.env['outdir'] || 'public'
 const postsDir = process.env['postsdir'] || 'posts'
-
-const log = new logger()
 
 async function build() {
   log.start('Starting build process')

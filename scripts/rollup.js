@@ -1,36 +1,34 @@
-const rollup = require('rollup')
-const fs = require('fs')
-const resolve = require('@rollup/plugin-node-resolve').default
-const svelte = require('rollup-plugin-svelte')
-const commonjs = require('@rollup/plugin-commonjs')
-const css = require('rollup-plugin-css-only')
+import { rollup } from 'rollup'
+import resolve from '@rollup/plugin-node-resolve'
+import svelte from 'rollup-plugin-svelte'
+import commonjs from '@rollup/plugin-commonjs'
+import css from 'rollup-plugin-css-only'
 
 async function run(componentName) {
-  const bundle = await rollup.rollup({
+  const bundle = await rollup({
     input: `src/${componentName}.svelte`,
     plugins: [
       svelte({
         compilerOptions: {
-          generate: "ssr",
-        }
+          generate: 'ssr',
+        },
       }),
       resolve({
         browser: true,
-        dedupe: ['svelte']
+        dedupe: ['svelte'],
       }),
       css({ output: 'ssr.css' }),
-      commonjs(),
-    ]
-  });
+    ],
+  })
 
   // Write the bundle to disk
   await bundle.write({
-    format: "umd",
-    dir: "build",
+    format: 'esm',
+    dir: 'build',
     name: componentName,
-  });
+  })
 
-  return require(`../build/${componentName}.js`)
+  return (await import(`../build/${componentName}.js`)).default
 }
 
-module.exports = run
+export default run

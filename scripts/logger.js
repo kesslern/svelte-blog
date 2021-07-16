@@ -1,4 +1,4 @@
-const { exit } = require('process')
+import { exit } from 'process'
 
 class Logger {
   newlineNeeded = false
@@ -51,4 +51,4 @@ class Logger {
   }
 }
 
-module.exports = Logger
+export default new Logger()

@@ -1,5 +1,5 @@
-const fs = require('fs')
-const marked = require('marked')
+import fs from 'fs'
+import marked from 'marked'
 
 // Parse a string into a date.
 // @param {string} date A YYYY-MM-DD date string.
@@ -55,4 +55,4 @@ async function md2html(filename) {
   return { date, html, title }
 }
 
-module.exports = md2html
+export default md2html
