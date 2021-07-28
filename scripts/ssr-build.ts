@@ -1,9 +1,7 @@
+import require from './require.ts'
 import log from './logger.ts'
 import md2html from './md2html.ts'
 // import rollup from './rollup.ts'
-
-import { createRequire } from 'https://deno.land/std@0.103.0/node/module.ts'
-const require = createRequire(import.meta.url)
 
 const fs = require('fs')
 // const slugify = require('slugify')
