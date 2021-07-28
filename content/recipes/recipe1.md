@@ -1,11 +1,1 @@
-# --date
-
-# --title
-
-# Recipe 1
-
-## Ingredients
-test
-
-## Instructions
-test
+<h1>Recipe 1</h1><h2>Ingredients</h2><h2>Instructions</h2><p>test</p>
