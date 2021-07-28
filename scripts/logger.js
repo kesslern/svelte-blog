@@ -1,23 +1,25 @@
-import { exit } from 'process'
-
 class Logger {
   newlineNeeded = false
   successNeeded = false
 
+  stdout(msg) {
+    Deno.stdout.writeSync(new TextEncoder().encode(msg))
+  }
+
   start(msg) {
     if (this.newlineNeeded) {
-      process.stdout.write('\n')
+      this.stdout('\n')
     }
     this.newlineNeeded = true
-    process.stdout.write(`ℹ ${msg}... `)
+    this.stdout(`ℹ ${msg}... `)
   }
 
   success(msg, ret) {
     this.newlineNeeded = false
     if (msg) {
-      process.stdout.write(`✅ ${msg}\n`)
+      this.stdout(`✅ ${msg}\n`)
     } else {
-      process.stdout.write('✅ done\n')
+      this.stdout('✅ done\n')
     }
     return ret
   }
@@ -25,14 +27,14 @@ class Logger {
   error(msg) {
     if (this.newlineNeeded) {
       this.newlineNeeded = false
-      process.stdout.write('\n')
+      this.stdout('\n')
     }
 
     console.log(`🚫 Error`)
     if (msg) {
       console.log(msg)
     }
-    exit(1)
+    Deno.exit(1)
   }
 
   async run(msg, fn) {

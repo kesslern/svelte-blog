@@ -1,5 +1,8 @@
-import fs from 'fs'
-import marked from 'marked'
+import { createRequire } from 'https://deno.land/std@0.103.0/node/module.ts'
+const require = createRequire(import.meta.url)
+
+const fs = require('fs')
+const marked = require('marked')
 
 // Parse a string into a date.
 // @param {string} date A YYYY-MM-DD date string.

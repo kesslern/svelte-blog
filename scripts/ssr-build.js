@@ -1,11 +1,15 @@
-import fs from 'fs'
-import slugify from 'slugify'
-import { stripHtml } from 'string-strip-html'
 import log from './logger.js'
 import md2html from './md2html.js'
 import rollup from './rollup.js'
 
-const outdir = process.env['outdir'] || 'public'
+import { createRequire } from 'https://deno.land/std@0.103.0/node/module.ts'
+const require = createRequire(import.meta.url)
+
+const fs = require('fs')
+const slugify = require('slugify')
+const { stripHtml } = require('string-strip-html')
+
+const outdir = Deno.env['outdir'] || 'public'
 
 async function build() {
   log.start('Starting build process')
@@ -28,7 +32,9 @@ async function build() {
   })
 
   console.log(JSON.stringify(markdownTree))
-  process.exit(1)
+  Deno.exit(1)
+
+  // --------------------------------------------------------
 
   const { Index, Post } = await log.run(
     'Building svelte components',
@@ -81,7 +87,7 @@ build()
 
 class FileTree {
   constructor() {
-    const contentPath = process.env['contentdir'] || 'content'
+    const contentPath = Deno.env['contentdir'] || 'content'
     this.content = [
       {
         name: contentPath,

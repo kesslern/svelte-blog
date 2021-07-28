@@ -1,7 +1,10 @@
-import { rollup } from 'rollup'
-import resolve from '@rollup/plugin-node-resolve'
-import svelte from 'rollup-plugin-svelte'
-import css from 'rollup-plugin-css-only'
+import { createRequire } from 'https://deno.land/std@0.103.0/node/module.ts'
+const require = createRequire(import.meta.url)
+
+const { rollup } = require('rollup')
+const resolve = require('@rollup/plugin-node-resolve')
+const svelte = require('rollup-plugin-svelte')
+const css = require('rollup-plugin-css-only')
 
 async function run(componentName) {
   const bundle = await rollup({
