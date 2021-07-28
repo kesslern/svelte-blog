@@ -5,6 +5,8 @@ import rollup from './rollup.js'
 
 import md2html from './md2html.js'
 import log from './logger.js'
+import { FILE } from 'dns'
+import { Console } from 'console'
 
 const outdir = process.env['outdir'] || 'public'
 const postsDir = process.env['postsdir'] || 'posts'
@@ -14,22 +16,23 @@ async function build() {
 
   await log.run('Ensuring build directories exist', () => {
     ensureDirExists(outdir)
-    ensureDirExists(`${outdir}/post`)
   })
 
-  const postsPaths = await log.run('Finding posts', () => {
-    const result = getPosts()
-    log.success(`Found ${result.length} posts`)
-    return result
+  const fileTree = await log.run('Building file tree', () => {
+    return log.success(null, new FileTree())
+  })
+  console.log(JSON.stringify(fileTree))
+
+  const markdownTree = await log.run('Building markdown tree', () => {
+    return log.success(null, new MarkdownTree(fileTree))
   })
 
-  const posts = await log.run(
-    'Building posts',
-    async () =>
-      await Promise.all(
-        postsPaths.map(async (postPath) => await md2html(postPath)),
-      ),
-  )
+  await log.run('Writing markdown files', () => {
+    log.success(null, markdownTree.write())
+  })
+
+  console.log(JSON.stringify(markdownTree))
+  process.exit(1)
 
   const { Index, Post } = await log.run(
     'Building svelte components',
@@ -60,15 +63,6 @@ async function build() {
   })
 }
 
-// List all files in the posts directory.
-function getPosts() {
-  const posts = []
-  fs.readdirSync(postsDir).forEach((file) => {
-    posts.push(`${postsDir}/${file}`)
-  })
-  return posts
-}
-
 // Copy files in static/ to outdir/
 function copyStatic() {
   const staticDir = 'static'
@@ -88,3 +82,83 @@ function ensureDirExists(dir) {
 }
 
 build()
+
+class FileTree {
+  constructor() {
+    const contentPath = process.env['contentdir'] || 'content'
+    this.content = [
+      {
+        name: contentPath,
+        path: contentPath,
+        type: 'directory',
+        children: FileTree.scanDir(contentPath),
+      },
+    ]
+  }
+
+  // Add all directory files to content and traverse down subdirectories
+  static scanDir(directoryPath) {
+    const content = []
+    const files = fs.readdirSync(directoryPath)
+    files.forEach((file) => {
+      const filePath = `${directoryPath}/${file}`
+      const stats = fs.statSync(filePath)
+      if (stats.isDirectory()) {
+        content.push({
+          name: file,
+          path: filePath,
+          type: 'directory',
+          children: FileTree.scanDir(filePath),
+        })
+      } else {
+        content.push({
+          name: file,
+          path: filePath,
+          type: 'file',
+        })
+      }
+    })
+    return content
+  }
+}
+
+class MarkdownTree {
+  constructor(fileTree) {
+    this.content = MarkdownTree.scanDir(fileTree.content)
+  }
+
+  write() {
+    const contentKeys = Object.keys(this.content)
+    contentKeys.forEach((key) => {
+      const file = this.content[key]
+      if (file.type === 'directory') {
+        const filePath = `${file.path}/${file.name}.html`
+        fs.writeFileSync(filePath, '')
+      }
+    })
+  }
+
+  static scanDir(directory) {
+    console.log('Directory')
+    console.log(directory)
+    const content = []
+    directory.children.forEach((file) => {
+      if (file.type === 'directory') {
+        content[file.name] = {
+          name: file.name,
+          path: file.path,
+          type: 'directory',
+          children: MarkdownTree.scanDir(file),
+        }
+      } else {
+        console.log('Compiling markdown: ' + file.path)
+        content[file.name] = {
+          path: file.path,
+          type: 'file',
+          post: md2html(file.path),
+        }
+      }
+    })
+    return content
+  }
+}

@@ -12,13 +12,14 @@ class Logger {
     process.stdout.write(`ℹ ${msg}... `)
   }
 
-  success(msg) {
+  success(msg, ret) {
     this.newlineNeeded = false
     if (msg) {
       process.stdout.write(`✅ ${msg}\n`)
     } else {
       process.stdout.write('✅ done\n')
     }
+    return ret
   }
 
   error(msg) {
