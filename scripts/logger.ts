@@ -2,11 +2,11 @@ class Logger {
   newlineNeeded = false
   successNeeded = false
 
-  stdout(msg) {
+  stdout(msg: string) {
     Deno.stdout.writeSync(new TextEncoder().encode(msg))
   }
 
-  start(msg) {
+  start(msg: string) {
     if (this.newlineNeeded) {
       this.stdout('\n')
     }
@@ -14,7 +14,7 @@ class Logger {
     this.stdout(`ℹ ${msg}... `)
   }
 
-  success(msg, ret) {
+  success<T>(msg?: string, ret?: T): T | undefined {
     this.newlineNeeded = false
     if (msg) {
       this.stdout(`✅ ${msg}\n`)
@@ -24,7 +24,7 @@ class Logger {
     return ret
   }
 
-  error(msg) {
+  error(msg: string) {
     if (this.newlineNeeded) {
       this.newlineNeeded = false
       this.stdout('\n')
@@ -34,23 +34,21 @@ class Logger {
     if (msg) {
       console.log(msg)
     }
-    Deno.exit(1)
   }
 
-  async run(msg, fn) {
-    var result = null
+  async run<T>(msg: string, fn: () => Promise<T>): Promise<T> {
 
     this.start(msg)
     try {
-      result = await fn()
-
+      const result = await fn()
       if (this.newlineNeeded) {
         this.success()
       }
+      return result
     } catch (e) {
       this.error(e)
+      Deno.exit(1)
     }
-    return result
   }
 }
 

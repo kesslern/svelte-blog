@@ -6,7 +6,7 @@ const resolve = require('@rollup/plugin-node-resolve')
 const svelte = require('rollup-plugin-svelte')
 const css = require('rollup-plugin-css-only')
 
-async function run(componentName) {
+async function run(componentName: string) {
   const bundle = await rollup({
     input: `src/${componentName}.svelte`,
     plugins: [

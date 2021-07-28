@@ -7,32 +7,33 @@ const marked = require('marked')
 // Parse a string into a date.
 // @param {string} date A YYYY-MM-DD date string.
 // @return {date} the date or null if parsing fails.
-function parseDate(date) {
-  if (date == null) {
-    return null
-  } else if (
-    (date = date.match(/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/))
-  ) {
-    date[0] = new Date(+date[1], +date[2] - 1, +date[3])
-    if (date[0].getMonth() === +date[2] - 1) return date[0]
-  } else {
-    return null
+function parseDate(date?: string): Date | undefined {
+  const match = date?.match(/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)
+
+  if (match) {
+    const result = new Date(+match[1], +match[2] - 1, +match[3])
+    if (result.getMonth() === +match[2] - 1) return result
   }
+
+  return undefined
 }
 
 // Compile a markdown file into HTML.
 // @param {string} filename The path to the markdown file.
-// @return {{date, html, title}} The HTML of the post, title, and an extracted date, if any
-function md2html(filename) {
-  const attributeStatus = {
+// @return {{date, html, title}} The HTML of, 'utf-8' the post, title, and an extracted date, if any
+function md2html(filename: string) {
+  const attributeStatus: {
+    in: boolean,
+    name: string,
+  } = {
     in: false,
-    name: null,
+    name: '',
   }
 
-  const attributes = {}
+  const attributes: Record<string, string | Date> = {}
 
   const renderer = {
-    heading(text, level) {
+    heading(text: string, level: number) {
       if (text.startsWith('--')) {
         attributeStatus.in = true
         return ''
@@ -44,7 +45,7 @@ function md2html(filename) {
 
       return `<h${level}>${text}</h${level}>`
     },
-    paragraph(text) {
+    paragraph(text: string) {
       if (attributeStatus.in) {
         attributes[attributeStatus.name] = text
         attributeStatus.in = false
@@ -55,14 +56,14 @@ function md2html(filename) {
     },
   }
 
-  const post = fs.readFileSync(`${filename}`, 'utf-8', function (err, result) {
-    if (err) console.log('error', err)
-  })
+  const post = Deno.readFileSync(filename)
 
   marked.use({ renderer })
-  const html = marked(post)
-  if (attributes.date) {
-    attributes.date = parseDate(attributes.date)
+  const html = marked(new TextDecoder().decode(post))
+
+  const parsedDate = parseDate(attributes.date as string)
+  if (parsedDate) {
+    attributes.date = parsedDate
   }
 
   return { html, attributes }
