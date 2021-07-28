@@ -1,15 +1,11 @@
 import fs from 'fs'
 import slugify from 'slugify'
 import { stripHtml } from 'string-strip-html'
+import log from './logger.js'
+import md2html from './md2html.js'
 import rollup from './rollup.js'
 
-import md2html from './md2html.js'
-import log from './logger.js'
-import { FILE } from 'dns'
-import { Console } from 'console'
-
 const outdir = process.env['outdir'] || 'public'
-const postsDir = process.env['postsdir'] || 'posts'
 
 async function build() {
   log.start('Starting build process')
