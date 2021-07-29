@@ -66,9 +66,8 @@ abstract class ContentBase {
       new RegExp(`^${ContentBase.basePath}(\/)?`),
       "",
     );
-    this.url = "/" + isDir
-      ? this.relativePath
-      : `${this.relativePath}/${this.name}`;
+    this.url = "/" +
+      (isDir ? this.relativePath : `${this.relativePath}/${this.name}`);
   }
 }
 
