@@ -17,8 +17,10 @@
 
 <body>
   {@html html}
+  {#if date}
   <footer>
     Posted on {date.toLocaleDateString("en-US")}
   </footer>
+  {/if}
 </body>
 </html>
