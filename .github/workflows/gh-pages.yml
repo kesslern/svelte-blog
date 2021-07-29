@@ -3,7 +3,7 @@ name: GitHub Pages action
 on:
   push:
     branches:
-      - main  # Set a branch name to trigger deployment
+      - main # Set a branch name to trigger deployment
   pull_request:
 
 jobs:
@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: denoland/setup-deno@v1
         with:
-          node-version: '14'
+          deno-version: v1.12.x
       - run: yarn install
       - run: yarn build
       - name: Deploy
