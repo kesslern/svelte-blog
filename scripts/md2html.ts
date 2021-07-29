@@ -29,6 +29,7 @@ function compileMarkdown(
     heading(text: string, level: number) {
       if (text.startsWith("--")) {
         attributeStatus.in = true;
+        attributeStatus.name = text.substr(2);
         return "";
       }
 

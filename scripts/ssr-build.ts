@@ -1,11 +1,11 @@
 import require from "./require.ts";
 import log from "./logger.ts";
 import md2html from "./md2html.ts";
-// import rollup from './rollup.ts'
+import { Index, Post } from "./svelte.ts";
 
 const fs = require("fs");
-// const slugify = require('slugify')
-// const { stripHtml } = require('string-strip-html')
+const slugify = require("slugify");
+const { stripHtml } = require("string-strip-html");
 
 const outdir = Deno.env.get("outdir") || "public";
 
@@ -16,59 +16,22 @@ async function build() {
     await ensureDirExists(outdir);
   });
 
-  const fileTree = await log.run("Building file tree", async () => {
-    return await log.success(undefined, new FileTree());
-  }) as FileTree;
-
-  const markdownTree = await log.run("Building markdown tree", async () => {
-    return await log.success(undefined, new MarkdownTree(fileTree));
-  }) as MarkdownTree;
-
-  await log.run("Writing markdown files", async () => {
-    await log.success(undefined, markdownTree.write());
-  });
-
-  Deno.exit(1);
-
-  // const { Index, Post } = await log.run(
-  //   'Building svelte components',
-  //   async () => ({
-  //     Index: await rollup('Index'),
-  //     Post: await rollup('Post'),
-  //   }),
-  // )
-
-  // posts.forEach((post) => {
-  //   post.slug = slugify(stripHtml(post.title).result)
-  //   post.path = `${outdir}/post/${post.slug}.html`
-  // })
-
-  // await log.run(`Writing posts to ${outdir}/post/`, () => {
-  //   posts.forEach((post) => {
-  //     fs.writeFileSync(post.path, Post.render({ ...post }).html)
-  //     post.url = `/post/${post.slug}.html`
-  //   })
-  // })
-
-  // const index = await log.run('Rendering index', () => Index.render({ posts }))
-
-  // await log.run('Copying static files', copyStatic)
-
-  // await log.run('Writing index.html', () => {
-  //   fs.writeFileSync(`${outdir}/index.html`, index.html)
-  // })
+  const contentTree = new ContentDirectory();
+  contentTree.write();
+  copyStatic();
 }
 
 // Copy files in static/ to outdir/
-// function copyStatic() {
-//   const staticDir = 'static'
-//   const staticFiles = fs.readdirSync(staticDir)
-//   staticFiles.forEach((file) => {
-//     const src = `${staticDir}/${file}`
-//     const dest = `${outdir}/${file}`
-//     fs.copyFileSync(src, dest)
-//   })
-// }
+function copyStatic() {
+  const staticDir = "static";
+  const staticFiles = Deno.readDirSync(staticDir);
+  for (const file of staticFiles) {
+    const src = `${staticDir}/${file.name}`;
+    const dest = `${outdir}/${file.name}`;
+    console.log({ src, dest });
+    Deno.copyFileSync(src, dest);
+  }
+}
 
 // Ensure a directory exists.
 function ensureDirExists(directoryPath: string) {
@@ -77,141 +40,134 @@ function ensureDirExists(directoryPath: string) {
   }
 }
 
-build();
+type Content = ContentDirectory | ContentFile;
 
-type FileTreeEntry = {
-  name: string;
-  path: string;
-  type: "directory" | "file";
-  children?: FileTreeEntry[];
-};
+abstract class ContentBase {
+  static basePath = Deno.env.get("contentdir") || "content";
+  protected fullPath: string;
+  protected relativePath: string;
+  protected name: string;
 
-class FileTree {
-  content: FileTreeEntry[];
+  public url: string;
+  public title: string;
 
-  constructor() {
-    const contentPath = Deno.env.get("contentdir") || "content";
-    this.content = [
-      {
-        name: contentPath,
-        path: contentPath,
-        type: "directory",
-        children: FileTree.scanDir(contentPath),
-      },
-    ];
-  }
-
-  // Add all directory files to content and traverse down subdirectories
-  static scanDir(directoryPath: string) {
-    console.log("Scanning " + directoryPath);
-    const content: FileTreeEntry[] = [];
-    const files = Deno.readDirSync(directoryPath);
-    for (const file of files) {
-      console.log(file);
-      const filePath = `${directoryPath}/${file.name}`;
-      if (file.isDirectory) {
-        content.push({
-          name: file.name,
-          path: filePath,
-          type: "directory",
-          children: FileTree.scanDir(filePath),
-        });
-      } else {
-        content.push({
-          name: file.name,
-          path: filePath,
-          type: "file",
-        });
-      }
-    }
-    return content;
+  constructor(path: string, file: { name: string }, isDir: boolean = false) {
+    this.name = file.name;
+    this.fullPath = path + file.name;
+    this.title = file.name;
+    this.relativePath = this.fullPath.replace(
+      new RegExp(`^${ContentBase.basePath}(\/)?`),
+      "",
+    );
+    this.url = "/" + isDir
+      ? this.relativePath
+      : `${this.relativePath}/${this.name}`;
   }
 }
 
-type MarkdownPost = {
-  html: string;
-  attributes: Record<string, string | Date>;
-};
+class ContentDirectory extends ContentBase {
+  private content: Content[] = [];
 
-type MarkdownTreeBase = {
-  name: string;
-  path: string;
-  type: "directory" | "file";
-};
+  constructor(
+    directoryPath: string = "",
+    file: { name: string } = { name: ContentDirectory.basePath },
+  ) {
+    super(directoryPath, file, true);
+    if (!this.fullPath.endsWith("/")) {
+      this.fullPath += "/";
+    }
 
-type MarkdownTreeDirectory = MarkdownTreeBase & {
-  children: MarkdownTreeEntry[];
-};
+    if (!this.relativePath.endsWith("/")) {
+      this.relativePath += "/";
+    }
 
-type MarkdownTreeFile = MarkdownTreeBase & {
-  post: MarkdownPost;
-};
-
-type MarkdownTreeEntry = MarkdownTreeDirectory | MarkdownTreeFile;
-
-class MarkdownTree {
-  content: MarkdownTreeEntry[];
-
-  constructor(fileTree: FileTree) {
-    this.content = MarkdownTree.scanDir(fileTree.content) || [];
+    const files = Deno.readDirSync(this.fullPath);
+    for (const file of files) {
+      if (file.isDirectory) {
+        this.content.push(
+          new ContentDirectory(this.fullPath, file),
+        );
+      } else {
+        this.content.push(new ContentFile(this.fullPath, file));
+      }
+    }
   }
 
   write() {
-    this.writeEntries(this.content);
-  }
-
-  private writeEntries(entries: MarkdownTreeEntry[]) {
-    for (const entry of entries) {
-      if (entry.type === "directory") {
-        const dirEntry = entry as MarkdownTreeDirectory;
-        ensureDirExists("public/" + entry.path);
-        this.writeEntries(dirEntry.children);
-      } else {
-        const markdownFile = entry as MarkdownTreeFile;
-        console.log(
-          "Writing markdown: " + entry.name + " to " + "public/" +
-            markdownFile.path,
-        );
-        fs.writeFileSync(
-          "public/" + markdownFile.path.replace(/\.md$/, ".html"),
-          markdownFile.post.html,
-        );
-      }
-    }
-  }
-
-  private static scanDir(directory: FileTreeEntry[]): MarkdownTreeEntry[] {
-    const content: MarkdownTreeEntry[] = [];
-    for (const file of directory) {
-      if (file.type === "directory") {
-        const directoryFile = file as MarkdownTreeDirectory;
-        content.push({
-          name: directoryFile.name,
-          path: directoryFile.path,
-          type: "directory",
-          children: MarkdownTree.scanDir(directoryFile.children),
-        });
-      } else {
-        console.log("Compiling markdown: " + file.path);
-        content.push({
-          name: file.name,
-          path: file.path,
-          type: "file",
-          post: md2html(file.path),
-        });
+    for (const item of this.content) {
+      if (item instanceof ContentDirectory) {
+        ensureDirExists("public/" + item.relativePath);
+        item.write();
+      } else if (item instanceof ContentFile) {
+        item.write();
       }
     }
 
-    return content;
+    const { html } = Index.render({
+      posts: this.content,
+    });
+    console.log("public/" + this.relativePath + "index.html");
+    fs.writeFileSync(
+      "public/" + this.relativePath + "index.html",
+      html,
+    );
   }
 }
+
+class ContentFile extends ContentBase {
+  private post: {
+    html: string;
+    attributes: Record<string, string>;
+  };
+
+  private filename: string;
+  private relativeDirectory: string;
+
+  constructor(basePath: string, file: Deno.DirEntry) {
+    super(basePath, file);
+    this.post = md2html(basePath + "/" + file.name);
+    this.filename = this.buildFilename();
+    this.title = this.post.attributes.title ?? this.name;
+    this.relativeDirectory = this.buildDirectory();
+    this.url = "/" + this.relativeDirectory + this.filename;
+    console.log(this);
+  }
+
+  private buildFilename(): string {
+    if (this.post.attributes.title) {
+      return slugify(stripHtml(this.post.attributes.title).result) + ".html";
+    } else {
+      return this.name.replace(/\.md$/, ".html");
+    }
+  }
+
+  private buildDirectory(): string {
+    return this.relativePath.replace(this.name, "");
+  }
+
+  write() {
+    const postDate = this.post.attributes.date
+      ? parseDate(this.post.attributes.date)
+      : null;
+    const { html } = Post.render({
+      html: this.post.html,
+      date: postDate,
+    });
+
+    fs.writeFileSync(
+      "public/" + this.relativeDirectory + this.filename,
+      html,
+    );
+  }
+}
+
+build();
 
 // Parse a string into a date.
 // @param {string} date A YYYY-MM-DD date string.
 // @return {date} the date or null if parsing fails.
 function parseDate(date?: string): Date | undefined {
   const match = date?.match(/^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/);
-
   if (match) {
     const result = new Date(+match[1], +match[2] - 1, +match[3]);
     if (result.getMonth() === +match[2] - 1) return result;

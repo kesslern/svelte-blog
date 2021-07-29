@@ -1,1 +1,7 @@
-<h1>Recipe 1</h1><h2>Ingredients</h2><h2>Instructions</h2><p>test</p>
+# Lentils or whatever
+
+## Ingredients
+test
+
+## Instructions
+test
