@@ -16,9 +16,17 @@ async function build() {
     await ensureDirExists(outdir);
   });
 
-  const contentTree = new ContentDirectory();
-  contentTree.write();
-  copyStatic();
+  const contentTree = await log.run("Reading content tree", async () => {
+    return await new ContentDirectory();
+  }) as ContentDirectory;
+
+  await log.run("Rendering content tree", async () => {
+    await contentTree.write();
+  });
+
+  await log.run("Copying static files", async () => {
+    await copyStatic();
+  });
 }
 
 // Copy files in static/ to outdir/
@@ -28,7 +36,6 @@ function copyStatic() {
   for (const file of staticFiles) {
     const src = `${staticDir}/${file.name}`;
     const dest = `${outdir}/${file.name}`;
-    console.log({ src, dest });
     Deno.copyFileSync(src, dest);
   }
 }
@@ -106,7 +113,6 @@ class ContentDirectory extends ContentBase {
     const { html } = Index.render({
       posts: this.content,
     });
-    console.log("public/" + this.relativePath + "index.html");
     fs.writeFileSync(
       "public/" + this.relativePath + "index.html",
       html,
@@ -130,7 +136,6 @@ class ContentFile extends ContentBase {
     this.title = this.post.attributes.title ?? this.name;
     this.relativeDirectory = this.buildDirectory();
     this.url = "/" + this.relativeDirectory + this.filename;
-    console.log(this);
   }
 
   private buildFilename(): string {
