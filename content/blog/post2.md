@@ -11,9 +11,9 @@ You keep forgetting. Let me describe the perfect-ass website:
 
   * Shit’s lightweight and loads fast.
   *	Fits on all your shitty screens.
-	*	Looks the same in all your shitty browsers.
-	*	Accessible to every asshole that visits your site.
-	*	Shit’s legible and gets the fucking point across (if you had one instead of just a 5MB background video of hipsters poking at their iPhones).
+  *	Looks the same in all your shitty browsers.
+  *	Accessible to every asshole that visits your site.
+  *	Shit’s legible and gets the fucking point across (if you had one instead of just a 5MB background video of hipsters poking at their iPhones).
 
 You do it every day. You take [a fucking masterpiece](http://motherfuckingwebsite.com) and incrementally [ruin it](http://bettermotherfuckingwebsite.com) for the sake of design. Let me remind you: design is *to plan and make something for a specific purpose*. The most basic purpose of text on a website is to be read. Yet you keep doing shit that gets in the way.
 
